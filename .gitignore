@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+src/*.DS_Store
+data/*.DS_Store
+data/raw/*.DS_Store
+src/swaption_pricing.egg-info/

@@ -1,0 +1,22 @@
+{
+  "yield_curve_date": "2026-06-12",
+  "ff_target_upper": 3.75,
+  "ff_target_lower": 3.5,
+  "rrp_award_rate": 3.5,
+  "cpiu_latest_reading": 4.2,
+  "cpiu_latest_reading_date": "2026-05-01",
+  "yield_1m": 3.69,
+  "yield_2m": 3.7,
+  "yield_3m": 3.78,
+  "yield_4m": 3.79,
+  "yield_6m": 3.82,
+  "yield_1y": 3.86,
+  "yield_2y": 4.09,
+  "yield_3y": 4.12,
+  "yield_5y": 4.21,
+  "yield_7y": 4.34,
+  "yield_10y": 4.48,
+  "yield_20y": 4.98,
+  "yield_30y": 4.97,
+  "recession": false
+}

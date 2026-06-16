@@ -1,0 +1,6 @@
+{
+  "source": "FRED_SOFR",
+  "latest_date": "2026-06-12",
+  "latest_rate_percent": 3.65,
+  "source_csv": "data/processed/sofr_bundle_local/sofr_history.csv"
+}

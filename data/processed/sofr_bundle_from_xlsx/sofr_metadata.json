@@ -1,0 +1,6 @@
+{
+  "source": "NYFED_SOFR_XLSX",
+  "latest_date": "2026-06-12",
+  "latest_rate_percent": 3.65,
+  "source_csv": "data/processed/sofr_bundle_from_xlsx/sofr_history.csv"
+}
