@@ -127,3 +127,4 @@ The current Bermudan market-style data scaffold lives in:
 - Milestone 4.3: Bachelier Comparison
 - Milestone 5: Risk and Hedging Across Models
 - Milestone 6: Final Integrated Report
+- Milestone 7: Bermudan Swaption Pricing with LSMC
