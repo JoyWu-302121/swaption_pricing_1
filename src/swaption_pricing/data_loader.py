@@ -9,12 +9,12 @@ from .curve_bootstrap import bootstrap_zero_curve
 from .types import CurvePoint, MarketQuote, ProjectDataBundle, SwaptionSpec, SwaptionVolQuote
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_EXAMPLE_DIR = PROJECT_ROOT / "data/raw/example"
+DEFAULT_EXAMPLE_DIR = PROJECT_ROOT / "data/european/example"
 DEFAULT_EXAMPLE_CURVE_CSV = DEFAULT_EXAMPLE_DIR / "curve_points.csv"
 DEFAULT_EXAMPLE_MARKET_QUOTES_CSV = DEFAULT_EXAMPLE_DIR / "market_quotes.csv"
 DEFAULT_EXAMPLE_SPEC_CSV = DEFAULT_EXAMPLE_DIR / "swaption_spec.csv"
 DEFAULT_EXAMPLE_VOL_SLICE_CSV = DEFAULT_EXAMPLE_DIR / "vol_slice.csv"
-DEFAULT_MARKET_DIR = PROJECT_ROOT / "data/raw/market"
+DEFAULT_MARKET_DIR = PROJECT_ROOT / "data/european/market"
 DEFAULT_MARKET_CURVE_CSV = DEFAULT_MARKET_DIR / "curve_points.csv"
 DEFAULT_MARKET_SPEC_CSV = DEFAULT_MARKET_DIR / "swaption_spec.csv"
 DEFAULT_MARKET_VOL_SLICE_CSV = DEFAULT_MARKET_DIR / "vol_slice.csv"
@@ -80,7 +80,7 @@ def load_swaption_vol_slice_csv(path: str | Path) -> list[SwaptionVolQuote]:
 
 
 def load_example_bundle() -> ProjectDataBundle:
-    """Load the example bundle from CSV files under data/raw/example."""
+    """Load the example bundle from CSV files under data/european/example."""
     return ProjectDataBundle(
         curve=load_curve_points_csv(DEFAULT_EXAMPLE_CURVE_CSV),
         spec=load_swaption_spec_csv(DEFAULT_EXAMPLE_SPEC_CSV),

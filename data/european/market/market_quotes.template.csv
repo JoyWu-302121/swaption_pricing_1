@@ -1,0 +1,6 @@
+instrument_type,maturity,rate,pay_frequency
+deposit,0.0833,,1
+deposit,0.25,,1
+swap,2.0,,1
+swap,5.0,,1
+swap,10.0,,1

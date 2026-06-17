@@ -27,6 +27,14 @@ from swaption_pricing.data_loader import (
     load_swaption_spec_csv,
     load_swaption_vol_slice_csv,
 )
+from swaption_pricing.pricing.bermudan import (
+    bermudan_exercise_schedule,
+    build_bermudan_calibration_targets,
+    build_lsmc_time_grid,
+    coterminal_tenors,
+    hw_model_summary,
+    polynomial_basis_vector,
+)
 from swaption_pricing.hedging import compare_model_hedging, swap_pv01
 from swaption_pricing.market_data import build_daily_zero_curve, zero_rate
 from swaption_pricing.market_validation import curve_node_rows, discount_factor_rows, load_json_metadata, trade_summary
@@ -68,6 +76,7 @@ from swaption_pricing.swap import (
     swap_present_value,
 )
 from swaption_pricing.types import CurvePoint, MarketQuote, SwaptionSpec
+from swaption_pricing.types import BermudanSwaptionSpec, HullWhiteParams, MonteCarloConfig, SwaptionVolQuote
 from swaption_pricing.ust_yield_curve_proxy import (
     build_ust_snapshot_url,
     snapshot_to_curve_points,
@@ -161,10 +170,10 @@ def test_example_bundle_has_curve_spec_and_vol_slice():
 
 def test_csv_loaders_read_example_files():
     root = repo_root()
-    curve = load_curve_points_csv(root / "data/raw/example/curve_points.csv")
-    quotes = load_market_quotes_csv(root / "data/raw/example/market_quotes.csv")
-    spec = load_swaption_spec_csv(root / "data/raw/example/swaption_spec.csv")
-    vol_slice = load_swaption_vol_slice_csv(root / "data/raw/example/vol_slice.csv")
+    curve = load_curve_points_csv(root / "data/european/example/curve_points.csv")
+    quotes = load_market_quotes_csv(root / "data/european/example/market_quotes.csv")
+    spec = load_swaption_spec_csv(root / "data/european/example/swaption_spec.csv")
+    vol_slice = load_swaption_vol_slice_csv(root / "data/european/example/vol_slice.csv")
     assert len(curve) == 7
     assert len(quotes) == 7
     assert spec.strike == 0.0400
@@ -174,13 +183,13 @@ def test_csv_loaders_read_example_files():
 def test_market_bundle_can_load_direct_curve_csv():
     root = repo_root()
     bundle = load_market_bundle(
-        curve_csv=root / "data/raw/example/curve_points.csv",
-        spec_csv=root / "data/raw/example/swaption_spec.csv",
-        vol_slice_csv=root / "data/raw/example/vol_slice.csv",
+        curve_csv=root / "data/european/example/curve_points.csv",
+        spec_csv=root / "data/european/example/swaption_spec.csv",
+        vol_slice_csv=root / "data/european/example/vol_slice.csv",
     )
     assert bundle.source == "market_csv"
-    assert bundle.curve_source.endswith("data/raw/example/curve_points.csv")
-    assert bundle.spec_source.endswith("data/raw/example/swaption_spec.csv")
+    assert bundle.curve_source.endswith("data/european/example/curve_points.csv")
+    assert bundle.spec_source.endswith("data/european/example/swaption_spec.csv")
     assert len(bundle.curve) == 7
     assert len(bundle.vol_slice) == 5
 
@@ -188,12 +197,12 @@ def test_market_bundle_can_load_direct_curve_csv():
 def test_market_bundle_can_bootstrap_from_market_quotes():
     root = repo_root()
     bundle = load_market_bundle(
-        market_quotes_csv=root / "data/raw/example/market_quotes.csv",
-        spec_csv=root / "data/raw/example/swaption_spec.csv",
+        market_quotes_csv=root / "data/european/example/market_quotes.csv",
+        spec_csv=root / "data/european/example/swaption_spec.csv",
         bootstrap_curve=True,
     )
     assert bundle.source == "market_csv"
-    assert bundle.curve_source.endswith("data/raw/example/market_quotes.csv")
+    assert bundle.curve_source.endswith("data/european/example/market_quotes.csv")
     assert len(bundle.curve) == 7
 
 
@@ -219,7 +228,7 @@ def test_market_validation_helpers_return_expected_shapes():
 
 
 def test_load_json_metadata_reads_ust_snapshot():
-    metadata = load_json_metadata(repo_root() / "data/raw/market/ust_yield_curve_proxy/ust_yield_curve_snapshot.json")
+    metadata = load_json_metadata(repo_root() / "data/european/market/ust_yield_curve_proxy/ust_yield_curve_snapshot.json")
     assert "yield_curve_date" in metadata
 
 
@@ -228,20 +237,20 @@ def test_load_project_data_supports_example_and_market_modes():
     example_bundle = load_project_data(data_mode="example")
     market_bundle = load_project_data(
         data_mode="market",
-        curve_csv=root / "data/raw/example/curve_points.csv",
-        spec_csv=root / "data/raw/example/swaption_spec.csv",
+        curve_csv=root / "data/european/example/curve_points.csv",
+        spec_csv=root / "data/european/example/swaption_spec.csv",
     )
     assert example_bundle.source == "example"
     assert market_bundle.source == "market_csv"
-    assert example_bundle.curve_source.endswith("data/raw/example/curve_points.csv")
+    assert example_bundle.curve_source.endswith("data/european/example/curve_points.csv")
 
 
 def test_auto_bundle_prefers_market_proxy_curve_when_available():
     bundle = load_auto_bundle()
     assert bundle.source == "market_auto"
-    assert "data/raw/market/curve_points.csv" in bundle.curve_source
-    assert "data/raw/market/swaption_spec.csv" in bundle.spec_source
-    assert "data/raw/market/vol_slice.csv" in bundle.vol_source
+    assert "data/european/market/curve_points.csv" in bundle.curve_source
+    assert "data/european/market/swaption_spec.csv" in bundle.spec_source
+    assert "data/european/market/vol_slice.csv" in bundle.vol_source
 
 
 def test_load_project_data_supports_auto_mode():
@@ -249,16 +258,54 @@ def test_load_project_data_supports_auto_mode():
     assert bundle.source == "market_auto"
 
 
+def test_bermudan_helpers_build_expected_schedule_and_targets():
+    spec = BermudanSwaptionSpec(
+        notional=10_000_000.0,
+        strike=0.0450,
+        swap_tenor=10.0,
+        pay_frequency=1,
+        option_type="payer",
+        exercise_dates=[1.0, 2.0, 3.0],
+        maturity=10.0,
+    )
+    quotes = [
+        SwaptionVolQuote(expiry=1.0, tenor=9.0, strike=0.0450, vol=0.22, vol_type="black"),
+        SwaptionVolQuote(expiry=2.0, tenor=8.0, strike=0.0450, vol=0.21, vol_type="black"),
+        SwaptionVolQuote(expiry=3.0, tenor=7.0, strike=0.0450, vol=0.20, vol_type="black"),
+        SwaptionVolQuote(expiry=5.0, tenor=5.0, strike=0.0450, vol=0.17, vol_type="black"),
+    ]
+    assert bermudan_exercise_schedule(spec) == [1.0, 2.0, 3.0]
+    assert coterminal_tenors(spec) == [9.0, 8.0, 7.0]
+    assert len(build_bermudan_calibration_targets(spec, quotes)) == 3
+
+
+def test_bermudan_lsmc_scaffold_helpers_return_expected_shapes():
+    spec = BermudanSwaptionSpec(
+        notional=10_000_000.0,
+        strike=0.0450,
+        swap_tenor=10.0,
+        pay_frequency=1,
+        option_type="payer",
+        exercise_dates=[1.0, 2.0, 3.0],
+        maturity=10.0,
+    )
+    grid = build_lsmc_time_grid(spec, MonteCarloConfig(num_paths=1000, delta_time=1.0))
+    assert grid[0] == 0.0
+    assert grid[-1] == 10.0
+    assert polynomial_basis_vector(0.5) == [1.0, 0.5, 0.25]
+    assert hw_model_summary(HullWhiteParams(mean_reversion=0.1, volatility=0.01))["volatility"] == 0.01
+
+
 def test_load_sofr_history_csv_reads_sample_file():
     root = repo_root()
-    observations = load_sofr_history_csv(root / "data/raw/market/sofr/sofr_history.sample.csv")
+    observations = load_sofr_history_csv(root / "data/common/market/sofr/sofr_history.sample.csv")
     assert len(observations) == 5
     assert observations[-1].rate_percent == 3.65
 
 
 def test_load_sofr_history_excel_reads_nyfed_export():
     root = repo_root()
-    observations = load_sofr_history_excel(root / "data/raw/market/SOFR_2026:01-0616.xlsx")
+    observations = load_sofr_history_excel(root / "data/common/market/sofr/SOFR_2026:01-0616.xlsx")
     assert len(observations) > 0
     assert observations[-1].date == "2026-06-12"
     assert observations[-1].rate_percent == 3.65
@@ -266,26 +313,26 @@ def test_load_sofr_history_excel_reads_nyfed_export():
 
 def test_latest_sofr_observation_from_excel_returns_last_row():
     root = repo_root()
-    observation = latest_sofr_observation_from_excel(root / "data/raw/market/SOFR_2026:01-0616.xlsx")
+    observation = latest_sofr_observation_from_excel(root / "data/common/market/sofr/SOFR_2026:01-0616.xlsx")
     assert observation.date == "2026-06-12"
     assert observation.rate_percent == 3.65
 
 
 def test_latest_sofr_observation_returns_last_row():
     root = repo_root()
-    observation = latest_sofr_observation(root / "data/raw/market/sofr/sofr_history.sample.csv")
+    observation = latest_sofr_observation(root / "data/common/market/sofr/sofr_history.sample.csv")
     assert observation.date == "2026-06-12"
     assert observation.rate_percent == 3.65
 
 
 def test_sofr_observation_maps_to_market_quote():
-    quote = sofr_to_market_quote(latest_sofr_observation(repo_root() / "data/raw/market/sofr/sofr_history.sample.csv"))
+    quote = sofr_to_market_quote(latest_sofr_observation(repo_root() / "data/common/market/sofr/sofr_history.sample.csv"))
     assert quote.instrument_type == "deposit"
     assert abs(quote.rate - 0.0365) < 1e-12
 
 
 def test_write_sofr_market_quote_csv_creates_normalized_file(tmp_path):
-    source = repo_root() / "data/raw/market/sofr/sofr_history.sample.csv"
+    source = repo_root() / "data/common/market/sofr/sofr_history.sample.csv"
     output = tmp_path / "sofr_quote.csv"
     write_sofr_market_quote_csv(source, output)
     rows = load_market_quotes_csv(output)
@@ -295,7 +342,7 @@ def test_write_sofr_market_quote_csv_creates_normalized_file(tmp_path):
 
 def test_write_sofr_history_csv_from_observations_creates_fred_style_file(tmp_path):
     observations = [
-        latest_sofr_observation(repo_root() / "data/raw/market/sofr/sofr_history.sample.csv"),
+        latest_sofr_observation(repo_root() / "data/common/market/sofr/sofr_history.sample.csv"),
     ]
     output = tmp_path / "history.csv"
     write_sofr_history_csv_from_observations(observations, output)
@@ -304,7 +351,7 @@ def test_write_sofr_history_csv_from_observations_creates_fred_style_file(tmp_pa
 
 
 def test_write_sofr_metadata_json_creates_summary_file(tmp_path):
-    source = repo_root() / "data/raw/market/sofr/sofr_history.sample.csv"
+    source = repo_root() / "data/common/market/sofr/sofr_history.sample.csv"
     output = tmp_path / "sofr_metadata.json"
     write_sofr_metadata_json(source, output)
     assert output.exists()
@@ -356,7 +403,7 @@ def test_write_snapshot_metadata_creates_json(tmp_path):
 
 
 def test_prepare_sofr_data_bundle_writes_expected_outputs(tmp_path, monkeypatch):
-    source = repo_root() / "data/raw/market/sofr/sofr_history.sample.csv"
+    source = repo_root() / "data/common/market/sofr/sofr_history.sample.csv"
 
     def fake_download(output_path, *, cosd=None, coed=None):
         Path(output_path).write_bytes(source.read_bytes())
@@ -370,7 +417,7 @@ def test_prepare_sofr_data_bundle_writes_expected_outputs(tmp_path, monkeypatch)
 
 
 def test_prepare_sofr_data_bundle_from_local_csv_writes_expected_outputs(tmp_path):
-    source = repo_root() / "data/raw/market/sofr/sofr_history.sample.csv"
+    source = repo_root() / "data/common/market/sofr/sofr_history.sample.csv"
     outputs = prepare_sofr_data_bundle_from_local_csv(source, tmp_path)
     assert outputs["history_csv"].exists()
     assert outputs["quote_csv"].exists()
@@ -378,7 +425,7 @@ def test_prepare_sofr_data_bundle_from_local_csv_writes_expected_outputs(tmp_pat
 
 
 def test_prepare_sofr_data_bundle_from_excel_writes_expected_outputs(tmp_path):
-    source = repo_root() / "data/raw/market/SOFR_2026:01-0616.xlsx"
+    source = repo_root() / "data/common/market/sofr/SOFR_2026:01-0616.xlsx"
     outputs = prepare_sofr_data_bundle_from_excel(source, tmp_path)
     assert outputs["history_csv"].exists()
     assert outputs["quote_csv"].exists()

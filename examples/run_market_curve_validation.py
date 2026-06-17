@@ -8,9 +8,9 @@ from swaption_pricing.market_validation import curve_node_rows, discount_factor_
 
 def main():
     project_root = Path(__file__).resolve().parent.parent
-    curve_csv = project_root / "data/raw/market/ust_yield_curve_proxy/curve_points.csv"
-    metadata_json = project_root / "data/raw/market/ust_yield_curve_proxy/ust_yield_curve_snapshot.json"
-    spec_csv = project_root / "data/raw/example/swaption_spec.csv"
+    curve_csv = project_root / "data/european/market/ust_yield_curve_proxy/curve_points.csv"
+    metadata_json = project_root / "data/european/market/ust_yield_curve_proxy/ust_yield_curve_snapshot.json"
+    spec_csv = project_root / "data/european/example/swaption_spec.csv"
 
     curve = load_curve_points_csv(curve_csv)
     spec = load_swaption_spec_csv(spec_csv)

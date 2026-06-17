@@ -1,8 +1,0 @@
-instrument_type,maturity,rate,pay_frequency
-deposit,1.0,0.0420,1
-swap,2.0,0.0415,1
-swap,3.0,0.0410,1
-swap,4.0,0.0408,1
-swap,5.0,0.0405,1
-swap,6.0,0.0403,1
-swap,7.0,0.0402,1

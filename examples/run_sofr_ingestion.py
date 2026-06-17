@@ -7,7 +7,7 @@ from swaption_pricing.sofr import latest_sofr_observation, write_sofr_market_quo
 
 def main():
     project_root = Path(__file__).resolve().parent.parent
-    source_csv = project_root / "data/raw/market/sofr/sofr_history.sample.csv"
+    source_csv = project_root / "data/common/market/sofr/sofr_history.sample.csv"
     quote_csv = project_root / "data/processed/sofr_latest_quote.csv"
 
     observation = latest_sofr_observation(source_csv)

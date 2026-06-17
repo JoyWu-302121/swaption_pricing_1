@@ -71,13 +71,13 @@ python3 main.py pricing
 python3 main.py pricing --data-mode auto
 python3 main.py pricing --data-mode example
 python3 main.py pricing --model sabr --data-mode example
-python3 main.py pricing --data-mode market --curve-csv data/raw/market/ust_yield_curve_proxy/curve_points.csv
-python3 main.py pricing --data-mode market --curve-csv data/raw/market/curve_points.csv --spec-csv data/raw/market/swaption_spec.csv
-python3 main.py calibration --data-mode market --curve-csv data/raw/market/curve_points.csv --spec-csv data/raw/market/swaption_spec.csv --vol-slice-csv data/raw/market/vol_slice.csv
-python3 main.py pricing --data-mode market --bootstrap-curve --market-quotes-csv data/raw/market/market_quotes.csv --spec-csv data/raw/market/swaption_spec.csv
-python3 main.py sofr --sofr-csv data/raw/market/sofr/sofr_history.csv --sofr-quote-csv data/processed/sofr_latest_quote.csv
-python3 scripts/fetch_sofr_data.py --output-dir data/raw/market/sofr --start-date 2026-01-01
-python3 scripts/fetch_ust_yield_curve_proxy.py --date 2026-06-12 --output-dir data/raw/market/ust_yield_curve_proxy
+python3 main.py pricing --data-mode market --curve-csv data/european/market/ust_yield_curve_proxy/curve_points.csv
+python3 main.py pricing --data-mode market --curve-csv data/european/market/curve_points.csv --spec-csv data/european/market/swaption_spec.csv
+python3 main.py calibration --data-mode market --curve-csv data/european/market/curve_points.csv --spec-csv data/european/market/swaption_spec.csv --vol-slice-csv data/european/market/vol_slice.csv
+python3 main.py pricing --data-mode market --bootstrap-curve --market-quotes-csv data/european/market/market_quotes.csv --spec-csv data/european/market/swaption_spec.csv
+python3 main.py sofr --sofr-csv data/common/market/sofr/sofr_history.csv --sofr-quote-csv data/processed/sofr_latest_quote.csv
+python3 scripts/fetch_sofr_data.py --output-dir data/common/market/sofr --start-date 2026-01-01
+python3 scripts/fetch_ust_yield_curve_proxy.py --date 2026-06-12 --output-dir data/european/market/ust_yield_curve_proxy
 python3 examples/run_market_curve_validation.py
 ```
 
@@ -85,11 +85,27 @@ python3 examples/run_market_curve_validation.py
 
 ```text
 docs/                   Project notes and research plans
-data/raw/               Example CSVs and market-data templates
+data/european/          European example and market inputs
+data/bermudan/          Bermudan trade and calibration inputs
+data/common/market/     Shared market-source inputs such as SOFR history
 notebooks/              Exploratory analysis and final presentation notebooks
 src/swaption_pricing/   Core pricing and risk modules
 tests/                  Unit tests
 ```
+
+## Pricing Architecture
+
+The pricing package is now conceptually split into:
+
+- `src/swaption_pricing/pricing/european/`
+  European pricing workflow exports for Black, SABR, and Bachelier
+- `src/swaption_pricing/pricing/bermudan/`
+  Bermudan LSMC scaffolding for market-calibrated Hull-White workflows
+
+The current Bermudan market-style data scaffold lives in:
+
+- `data/bermudan/market/bermudan_spec.csv`
+- `data/bermudan/market/bermudan_european_calibration_vols.csv`
 
 ## Repository Roles
 

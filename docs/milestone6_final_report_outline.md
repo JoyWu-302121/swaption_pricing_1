@@ -119,7 +119,7 @@ Explain the inputs required before any pricing model becomes meaningful.
 
 - `src/swaption_pricing/data_loader.py`
 - `src/swaption_pricing/sofr.py`
-- `data/raw/market/README.md`
+- `data/european/market/README.md`
 - `notebooks/milestone1_curve_and_swap_analytics.ipynb`
 
 ## 4. Curve Construction and Swap Analytics

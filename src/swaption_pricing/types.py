@@ -29,12 +29,45 @@ class SwaptionSpec:
 
 
 @dataclass(frozen=True)
+class BermudanSwaptionSpec:
+    notional: float
+    strike: float
+    swap_tenor: float
+    pay_frequency: int
+    option_type: str
+    exercise_dates: Sequence[float]
+    maturity: float
+
+
+@dataclass(frozen=True)
 class SwaptionVolQuote:
     expiry: float
     tenor: float
     strike: float
     vol: float
     vol_type: str
+
+
+@dataclass(frozen=True)
+class HullWhiteParams:
+    mean_reversion: float
+    volatility: float
+
+
+@dataclass(frozen=True)
+class MonteCarloConfig:
+    num_paths: int
+    delta_time: float
+    seed: int | None = None
+    antithetic: bool = True
+
+
+@dataclass(frozen=True)
+class BermudanLSMCResult:
+    price: float
+    exercise_probabilities: Sequence[float]
+    exercise_counts: Sequence[int]
+    time_grid: Sequence[float]
 
 
 @dataclass(frozen=True)

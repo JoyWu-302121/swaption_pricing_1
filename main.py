@@ -268,7 +268,7 @@ def run_sofr(args: argparse.Namespace) -> None:
     if args.sofr_csv:
         source_path = Path(args.sofr_csv)
     else:
-        source_path = PROJECT_ROOT / "data/raw/market/sofr/sofr_history.csv"
+        source_path = PROJECT_ROOT / "data/common/market/sofr/sofr_history.csv"
         download_sofr_history_csv(source_path, cosd=args.sofr_start, coed=args.sofr_end)
 
     observation = latest_sofr_observation(source_path)

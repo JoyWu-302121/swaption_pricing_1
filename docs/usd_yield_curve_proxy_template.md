@@ -6,7 +6,7 @@ This template is for a manually curated USD yield curve proxy when full SOFR swa
 
 The file is designed to plug directly into the project's existing market-data loader:
 
-- `data/raw/market/usd_yield_curve_proxy.template.csv`
+- `data/european/market/usd_yield_curve_proxy.template.csv`
 
 Expected columns:
 
@@ -60,12 +60,12 @@ That wording is important because Treasury yields and SOFR swap rates are not id
 ## Example Workflow
 
 1. Copy the template into a working file, for example:
-   - `data/raw/market/curve_points.csv`
+   - `data/european/market/curve_points.csv`
 2. Fill in the `zero_rate` column with the yields you collected
 3. Run:
 
 ```bash
-PYTHONPATH=src python3 main.py pricing --data-mode market --curve-csv data/raw/market/curve_points.csv --spec-csv data/raw/market/swaption_spec.csv
+PYTHONPATH=src python3 main.py pricing --data-mode market --curve-csv data/european/market/curve_points.csv --spec-csv data/european/market/swaption_spec.csv
 ```
 
 4. Use the resulting curve in:
