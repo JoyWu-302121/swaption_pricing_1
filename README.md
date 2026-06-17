@@ -52,6 +52,9 @@ Use the single entry point below:
 ```bash
 python3 main.py
 python3 main.py pricing
+python3 main.py pricing --model black
+python3 main.py pricing --model sabr
+python3 main.py pricing --model bachelier
 python3 main.py comparison
 python3 main.py risk
 python3 main.py calibration
@@ -59,11 +62,16 @@ python3 main.py sofr
 ```
 
 `python3 main.py` defaults to `pricing`.
+`pricing` defaults to `--data-mode auto`, which prefers market data when available and falls back to the built-in example bundle only when needed.
 
 Example mode and market mode can coexist:
 
 ```bash
+python3 main.py pricing
+python3 main.py pricing --data-mode auto
 python3 main.py pricing --data-mode example
+python3 main.py pricing --model sabr --data-mode example
+python3 main.py pricing --data-mode market --curve-csv data/raw/market/ust_yield_curve_proxy/curve_points.csv
 python3 main.py pricing --data-mode market --curve-csv data/raw/market/curve_points.csv --spec-csv data/raw/market/swaption_spec.csv
 python3 main.py calibration --data-mode market --curve-csv data/raw/market/curve_points.csv --spec-csv data/raw/market/swaption_spec.csv --vol-slice-csv data/raw/market/vol_slice.csv
 python3 main.py pricing --data-mode market --bootstrap-curve --market-quotes-csv data/raw/market/market_quotes.csv --spec-csv data/raw/market/swaption_spec.csv

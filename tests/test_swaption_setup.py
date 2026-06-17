@@ -18,8 +18,9 @@ from swaption_pricing.calibration import (
 )
 from swaption_pricing.curve_bootstrap import bootstrap_zero_curve
 from swaption_pricing.data_loader import (
-    build_example_bundle,
+    load_auto_bundle,
     load_curve_points_csv,
+    load_example_bundle,
     load_market_bundle,
     load_market_quotes_csv,
     load_project_data,
@@ -152,7 +153,7 @@ def test_bootstrap_zero_curve_produces_ordered_nodes():
 
 
 def test_example_bundle_has_curve_spec_and_vol_slice():
-    bundle = build_example_bundle()
+    bundle = load_example_bundle()
     assert len(bundle.curve) > 0
     assert bundle.spec.option_type == "payer"
     assert len(bundle.vol_slice) > 0
@@ -178,6 +179,8 @@ def test_market_bundle_can_load_direct_curve_csv():
         vol_slice_csv=root / "data/raw/example/vol_slice.csv",
     )
     assert bundle.source == "market_csv"
+    assert bundle.curve_source.endswith("data/raw/example/curve_points.csv")
+    assert bundle.spec_source.endswith("data/raw/example/swaption_spec.csv")
     assert len(bundle.curve) == 7
     assert len(bundle.vol_slice) == 5
 
@@ -190,6 +193,7 @@ def test_market_bundle_can_bootstrap_from_market_quotes():
         bootstrap_curve=True,
     )
     assert bundle.source == "market_csv"
+    assert bundle.curve_source.endswith("data/raw/example/market_quotes.csv")
     assert len(bundle.curve) == 7
 
 
@@ -229,6 +233,20 @@ def test_load_project_data_supports_example_and_market_modes():
     )
     assert example_bundle.source == "example"
     assert market_bundle.source == "market_csv"
+    assert example_bundle.curve_source.endswith("data/raw/example/curve_points.csv")
+
+
+def test_auto_bundle_prefers_market_proxy_curve_when_available():
+    bundle = load_auto_bundle()
+    assert bundle.source == "market_auto"
+    assert "data/raw/market/curve_points.csv" in bundle.curve_source
+    assert "data/raw/market/swaption_spec.csv" in bundle.spec_source
+    assert "data/raw/market/vol_slice.csv" in bundle.vol_source
+
+
+def test_load_project_data_supports_auto_mode():
+    bundle = load_project_data(data_mode="auto")
+    assert bundle.source == "market_auto"
 
 
 def test_load_sofr_history_csv_reads_sample_file():

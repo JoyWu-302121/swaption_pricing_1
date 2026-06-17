@@ -1,4 +1,4 @@
-"""Load example or CSV-based market data into normalized project objects."""
+"""Load example or market CSV data into normalized project objects."""
 
 from __future__ import annotations
 
@@ -8,70 +8,23 @@ from pathlib import Path
 from .curve_bootstrap import bootstrap_zero_curve
 from .types import CurvePoint, MarketQuote, ProjectDataBundle, SwaptionSpec, SwaptionVolQuote
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_EXAMPLE_DIR = PROJECT_ROOT / "data/raw/example"
+DEFAULT_EXAMPLE_CURVE_CSV = DEFAULT_EXAMPLE_DIR / "curve_points.csv"
+DEFAULT_EXAMPLE_MARKET_QUOTES_CSV = DEFAULT_EXAMPLE_DIR / "market_quotes.csv"
+DEFAULT_EXAMPLE_SPEC_CSV = DEFAULT_EXAMPLE_DIR / "swaption_spec.csv"
+DEFAULT_EXAMPLE_VOL_SLICE_CSV = DEFAULT_EXAMPLE_DIR / "vol_slice.csv"
+DEFAULT_MARKET_DIR = PROJECT_ROOT / "data/raw/market"
+DEFAULT_MARKET_CURVE_CSV = DEFAULT_MARKET_DIR / "curve_points.csv"
+DEFAULT_MARKET_SPEC_CSV = DEFAULT_MARKET_DIR / "swaption_spec.csv"
+DEFAULT_MARKET_VOL_SLICE_CSV = DEFAULT_MARKET_DIR / "vol_slice.csv"
+DEFAULT_MARKET_QUOTES_CSV = DEFAULT_MARKET_DIR / "market_quotes.csv"
+DEFAULT_PROXY_CURVE_CSV = DEFAULT_MARKET_DIR / "ust_yield_curve_proxy/curve_points.csv"
+
 
 def _read_csv_rows(path: str | Path) -> list[dict[str, str]]:
     with Path(path).open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
-
-
-def build_example_curve() -> list[CurvePoint]:
-    """Return the synthetic curve used throughout the project examples."""
-    return [
-        CurvePoint(maturity=1.0, zero_rate=0.0420),
-        CurvePoint(maturity=2.0, zero_rate=0.0415),
-        CurvePoint(maturity=3.0, zero_rate=0.0410),
-        CurvePoint(maturity=4.0, zero_rate=0.0408),
-        CurvePoint(maturity=5.0, zero_rate=0.0405),
-        CurvePoint(maturity=6.0, zero_rate=0.0403),
-        CurvePoint(maturity=7.0, zero_rate=0.0402),
-    ]
-
-
-def build_example_market_quotes() -> list[MarketQuote]:
-    """Return the synthetic market-quote ladder used for bootstrap demos."""
-    return [
-        MarketQuote(instrument_type="deposit", maturity=1.0, rate=0.0420),
-        MarketQuote(instrument_type="swap", maturity=2.0, rate=0.0415, pay_frequency=1),
-        MarketQuote(instrument_type="swap", maturity=3.0, rate=0.0410, pay_frequency=1),
-        MarketQuote(instrument_type="swap", maturity=4.0, rate=0.0408, pay_frequency=1),
-        MarketQuote(instrument_type="swap", maturity=5.0, rate=0.0405, pay_frequency=1),
-        MarketQuote(instrument_type="swap", maturity=6.0, rate=0.0403, pay_frequency=1),
-        MarketQuote(instrument_type="swap", maturity=7.0, rate=0.0402, pay_frequency=1),
-    ]
-
-
-def build_example_spec(strike: float = 0.0400, option_type: str = "payer") -> SwaptionSpec:
-    """Return the default example swaption specification."""
-    return SwaptionSpec(
-        notional=10_000_000.0,
-        expiry=2.0,
-        tenor=5.0,
-        strike=strike,
-        pay_frequency=1,
-        option_type=option_type,
-    )
-
-
-def build_example_vol_slice() -> list[SwaptionVolQuote]:
-    """Return a synthetic smile slice around the example trade."""
-    return [
-        SwaptionVolQuote(expiry=2.0, tenor=5.0, strike=0.0300, vol=0.1350, vol_type="black"),
-        SwaptionVolQuote(expiry=2.0, tenor=5.0, strike=0.0350, vol=0.1180, vol_type="black"),
-        SwaptionVolQuote(expiry=2.0, tenor=5.0, strike=0.0400, vol=0.1025, vol_type="black"),
-        SwaptionVolQuote(expiry=2.0, tenor=5.0, strike=0.0450, vol=0.0940, vol_type="black"),
-        SwaptionVolQuote(expiry=2.0, tenor=5.0, strike=0.0500, vol=0.0915, vol_type="black"),
-    ]
-
-
-def build_example_bundle() -> ProjectDataBundle:
-    """Return the complete synthetic data bundle used across the project."""
-    return ProjectDataBundle(
-        curve=build_example_curve(),
-        spec=build_example_spec(),
-        market_quotes=build_example_market_quotes(),
-        vol_slice=build_example_vol_slice(),
-        source="example",
-    )
 
 
 def load_curve_points_csv(path: str | Path) -> list[CurvePoint]:
@@ -126,6 +79,20 @@ def load_swaption_vol_slice_csv(path: str | Path) -> list[SwaptionVolQuote]:
     ]
 
 
+def load_example_bundle() -> ProjectDataBundle:
+    """Load the example bundle from CSV files under data/raw/example."""
+    return ProjectDataBundle(
+        curve=load_curve_points_csv(DEFAULT_EXAMPLE_CURVE_CSV),
+        spec=load_swaption_spec_csv(DEFAULT_EXAMPLE_SPEC_CSV),
+        market_quotes=load_market_quotes_csv(DEFAULT_EXAMPLE_MARKET_QUOTES_CSV),
+        vol_slice=load_swaption_vol_slice_csv(DEFAULT_EXAMPLE_VOL_SLICE_CSV),
+        source="example",
+        curve_source=str(DEFAULT_EXAMPLE_CURVE_CSV),
+        spec_source=str(DEFAULT_EXAMPLE_SPEC_CSV),
+        vol_source=str(DEFAULT_EXAMPLE_VOL_SLICE_CSV),
+    )
+
+
 def load_market_bundle(
     *,
     curve_csv: str | Path | None = None,
@@ -144,20 +111,111 @@ def load_market_bundle(
             raise ValueError("market_quotes_csv is required when bootstrap_curve=True")
         market_quotes = load_market_quotes_csv(market_quotes_csv)
         curve = bootstrap_zero_curve(market_quotes)
+        curve_source = str(Path(market_quotes_csv))
     else:
         if curve_csv is None:
             raise ValueError("curve_csv is required when bootstrap_curve=False")
         curve = load_curve_points_csv(curve_csv)
         market_quotes = load_market_quotes_csv(market_quotes_csv) if market_quotes_csv else []
+        curve_source = str(Path(curve_csv))
 
-    spec = load_swaption_spec_csv(spec_csv) if spec_csv else build_example_spec()
+    if spec_csv:
+        spec = load_swaption_spec_csv(spec_csv)
+        spec_source = str(Path(spec_csv))
+    else:
+        spec = load_swaption_spec_csv(DEFAULT_EXAMPLE_SPEC_CSV)
+        spec_source = f"{DEFAULT_EXAMPLE_SPEC_CSV} (example fallback)"
     vol_slice = load_swaption_vol_slice_csv(vol_slice_csv) if vol_slice_csv else []
+    vol_source = str(Path(vol_slice_csv)) if vol_slice_csv else "no market vol slice loaded"
     return ProjectDataBundle(
         curve=curve,
         spec=spec,
         market_quotes=market_quotes,
         vol_slice=vol_slice,
         source="market_csv",
+        curve_source=curve_source,
+        spec_source=spec_source,
+        vol_source=vol_source,
+    )
+
+
+def load_auto_bundle(
+    *,
+    curve_csv: str | Path | None = None,
+    market_quotes_csv: str | Path | None = None,
+    spec_csv: str | Path | None = None,
+    vol_slice_csv: str | Path | None = None,
+    bootstrap_curve: bool = False,
+) -> ProjectDataBundle:
+    """Load market data when available, otherwise fall back to the example bundle."""
+    explicit_curve_csv = Path(curve_csv) if curve_csv else None
+    explicit_market_quotes_csv = Path(market_quotes_csv) if market_quotes_csv else None
+    explicit_spec_csv = Path(spec_csv) if spec_csv else None
+    explicit_vol_slice_csv = Path(vol_slice_csv) if vol_slice_csv else None
+
+    if bootstrap_curve:
+        candidate_market_quotes = explicit_market_quotes_csv or DEFAULT_MARKET_QUOTES_CSV
+        if candidate_market_quotes.exists():
+            candidate_spec = explicit_spec_csv if explicit_spec_csv and explicit_spec_csv.exists() else (
+                DEFAULT_MARKET_SPEC_CSV if DEFAULT_MARKET_SPEC_CSV.exists() else None
+            )
+            candidate_vol = explicit_vol_slice_csv if explicit_vol_slice_csv and explicit_vol_slice_csv.exists() else (
+                DEFAULT_MARKET_VOL_SLICE_CSV if DEFAULT_MARKET_VOL_SLICE_CSV.exists() else None
+            )
+            return load_market_bundle(
+                market_quotes_csv=candidate_market_quotes,
+                spec_csv=candidate_spec,
+                vol_slice_csv=candidate_vol,
+                bootstrap_curve=True,
+            )
+
+    candidate_curve = None
+    if explicit_curve_csv and explicit_curve_csv.exists():
+        candidate_curve = explicit_curve_csv
+    elif DEFAULT_MARKET_CURVE_CSV.exists():
+        candidate_curve = DEFAULT_MARKET_CURVE_CSV
+    elif DEFAULT_PROXY_CURVE_CSV.exists():
+        candidate_curve = DEFAULT_PROXY_CURVE_CSV
+
+    if candidate_curve is not None:
+        candidate_spec = explicit_spec_csv if explicit_spec_csv and explicit_spec_csv.exists() else (
+            DEFAULT_MARKET_SPEC_CSV if DEFAULT_MARKET_SPEC_CSV.exists() else None
+        )
+        candidate_vol = explicit_vol_slice_csv if explicit_vol_slice_csv and explicit_vol_slice_csv.exists() else (
+            DEFAULT_MARKET_VOL_SLICE_CSV if DEFAULT_MARKET_VOL_SLICE_CSV.exists() else None
+        )
+        bundle = load_market_bundle(
+            curve_csv=candidate_curve,
+            spec_csv=candidate_spec,
+            vol_slice_csv=candidate_vol,
+            bootstrap_curve=False,
+        )
+        source = "market_auto"
+        curve_source = str(candidate_curve)
+        if candidate_curve == DEFAULT_PROXY_CURVE_CSV:
+            source = "market_proxy_auto"
+            curve_source = f"{candidate_curve} (UST proxy)"
+        return ProjectDataBundle(
+            curve=bundle.curve,
+            spec=bundle.spec,
+            market_quotes=bundle.market_quotes,
+            vol_slice=bundle.vol_slice,
+            source=source,
+            curve_source=curve_source,
+            spec_source=bundle.spec_source,
+            vol_source=bundle.vol_source,
+        )
+
+    example_bundle = load_example_bundle()
+    return ProjectDataBundle(
+        curve=example_bundle.curve,
+        spec=example_bundle.spec,
+        market_quotes=example_bundle.market_quotes,
+        vol_slice=example_bundle.vol_slice,
+        source="example_fallback",
+        curve_source=example_bundle.curve_source,
+        spec_source=example_bundle.spec_source,
+        vol_source=example_bundle.vol_source,
     )
 
 
@@ -170,10 +228,18 @@ def load_project_data(
     vol_slice_csv: str | Path | None = None,
     bootstrap_curve: bool = False,
 ) -> ProjectDataBundle:
-    """Load either the built-in example bundle or a CSV-backed market bundle."""
+    """Load project data using example, market, or auto-prefer-market mode."""
     normalized_mode = data_mode.lower()
     if normalized_mode == "example":
-        return build_example_bundle()
+        return load_example_bundle()
+    if normalized_mode == "auto":
+        return load_auto_bundle(
+            curve_csv=curve_csv,
+            market_quotes_csv=market_quotes_csv,
+            spec_csv=spec_csv,
+            vol_slice_csv=vol_slice_csv,
+            bootstrap_curve=bootstrap_curve,
+        )
     if normalized_mode == "market":
         return load_market_bundle(
             curve_csv=curve_csv,
@@ -182,4 +248,4 @@ def load_project_data(
             vol_slice_csv=vol_slice_csv,
             bootstrap_curve=bootstrap_curve,
         )
-    raise ValueError("data_mode must be 'example' or 'market'")
+    raise ValueError("data_mode must be 'auto', 'example', or 'market'")

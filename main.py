@@ -12,10 +12,16 @@ SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
+from swaption_pricing.bachelier import price_swaption_bachelier
 from swaption_pricing.black76 import price_swaption
 from swaption_pricing.calibration import calibrate_sabr_to_vols
 from swaption_pricing.data_loader import load_project_data
-from swaption_pricing.risk import calculate_risk, compare_black_and_sabr_risk
+from swaption_pricing.risk import (
+    calculate_bachelier_risk,
+    calculate_risk,
+    calculate_sabr_risk,
+    compare_black_and_sabr_risk,
+)
 from swaption_pricing.sabr import SabrParams, price_swaption_with_sabr, sabr_implied_volatility
 from swaption_pricing.sofr import (
     prepare_sofr_data_bundle,
@@ -29,6 +35,21 @@ from swaption_pricing.sofr import (
 from swaption_pricing.swap import forward_swap_rate, swap_annuity
 
 
+def select_market_vol(bundle, spec, default_vol: float, vol_type: str) -> float:
+    """Pick a strike-matched market vol when available, otherwise use the fallback."""
+    matching_quotes = [
+        quote
+        for quote in bundle.vol_slice
+        if quote.vol_type.lower() == vol_type.lower()
+        and abs(quote.expiry - spec.expiry) < 1e-12
+        and abs(quote.tenor - spec.tenor) < 1e-12
+        and abs(quote.strike - spec.strike) < 1e-12
+    ]
+    if matching_quotes:
+        return matching_quotes[0].vol
+    return default_vol
+
+
 def run_pricing(args: argparse.Namespace) -> None:
     bundle = load_project_data(
         data_mode=args.data_mode,
@@ -40,21 +61,51 @@ def run_pricing(args: argparse.Namespace) -> None:
     )
     curve = bundle.curve
     spec = bundle.spec
-    vol = 0.20
 
     forward = forward_swap_rate(curve, spec.expiry, spec.tenor, spec.pay_frequency)
     annuity = swap_annuity(curve, spec.expiry, spec.tenor, spec.pay_frequency)
-    price = price_swaption(curve, spec, vol)
-    risk = calculate_risk(curve, spec, vol)
 
     print("Swaption Example")
+    print(f"Model:             {args.model}")
     print(f"Forward swap rate: {forward:.6f}")
     print(f"Swap annuity:      {annuity:.6f}")
-    print(f"Price:             {price:,.2f}")
-    print(f"PV01:              {risk.pv01:,.2f}")
-    print(f"Vega:              {risk.vega:,.2f}")
-    print(f"Theta:             {risk.theta:,.2f}")
+
+    if args.model == "black":
+        vol = select_market_vol(bundle, spec, args.black_vol, "black")
+        price = price_swaption(curve, spec, vol)
+        risk = calculate_risk(curve, spec, vol)
+        print(f"Quoted vol:        {vol:.6f}")
+        print(f"Price:             {price:,.2f}")
+        print(f"PV01:              {risk.pv01:,.2f}")
+        print(f"Vega:              {risk.vega:,.2f}")
+        print(f"Theta:             {risk.theta:,.2f}")
+    elif args.model == "sabr":
+        params = SabrParams(alpha=args.sabr_alpha, beta=args.sabr_beta, rho=args.sabr_rho, nu=args.sabr_nu)
+        price, implied_vol = price_swaption_with_sabr(curve, spec, params)
+        risk = calculate_sabr_risk(curve, spec, params)
+        print(
+            "SABR params:       "
+            f"alpha={params.alpha:.4f}, beta={params.beta:.4f}, rho={params.rho:.4f}, nu={params.nu:.4f}"
+        )
+        print(f"Implied Black vol: {implied_vol:.6f}")
+        print(f"Price:             {price:,.2f}")
+        print(f"PV01:              {risk.pv01:,.2f}")
+        print(f"Alpha risk:        {risk.vega:,.2f}")
+        print(f"Theta:             {risk.theta:,.2f}")
+    elif args.model == "bachelier":
+        normal_vol = select_market_vol(bundle, spec, args.normal_vol, "normal")
+        price = price_swaption_bachelier(curve, spec, normal_vol)
+        risk = calculate_bachelier_risk(curve, spec, normal_vol)
+        print(f"Normal vol:        {normal_vol:.6f}")
+        print(f"Price:             {price:,.2f}")
+        print(f"PV01:              {risk.pv01:,.2f}")
+        print(f"Normal vega:       {risk.vega:,.2f}")
+        print(f"Theta:             {risk.theta:,.2f}")
+
     print(f"Data source:       {bundle.source}")
+    print(f"Curve source:      {bundle.curve_source}")
+    print(f"Spec source:       {bundle.spec_source}")
+    print(f"Vol source:        {bundle.vol_source}")
 
 
 def run_comparison(args: argparse.Namespace) -> None:
@@ -88,6 +139,9 @@ def run_comparison(args: argparse.Namespace) -> None:
         sabr_price, sabr_vol = price_swaption_with_sabr(curve, spec, sabr_params)
         print(f"{strike:0.4f}     {forward:0.4f}     {black_price:10.2f}   {sabr_vol:0.4f}   {sabr_price:10.2f}")
     print(f"Data source: {bundle.source}")
+    print(f"Curve source: {bundle.curve_source}")
+    print(f"Spec source: {bundle.spec_source}")
+    print(f"Vol source: {bundle.vol_source}")
 
 
 def run_risk(args: argparse.Namespace) -> None:
@@ -124,6 +178,9 @@ def run_risk(args: argparse.Namespace) -> None:
         f"Theta={result.sabr_risk.theta:,.2f}"
     )
     print(f"Data source: {bundle.source}")
+    print(f"Curve source: {bundle.curve_source}")
+    print(f"Spec source: {bundle.spec_source}")
+    print(f"Vol source: {bundle.vol_source}")
 
 
 def run_calibration(args: argparse.Namespace) -> None:
@@ -169,6 +226,9 @@ def run_calibration(args: argparse.Namespace) -> None:
     for strike, market_vol, fitted_vol in zip(result.strikes, result.market_vols, result.fitted_vols):
         print(f"{strike:0.4f}     {market_vol:0.6f}    {fitted_vol:0.6f}")
     print(f"Data source: {bundle.source}")
+    print(f"Curve source: {bundle.curve_source}")
+    print(f"Spec source: {bundle.spec_source}")
+    print(f"Vol source: {bundle.vol_source}")
 
 
 def run_sofr(args: argparse.Namespace) -> None:
@@ -236,12 +296,29 @@ def build_parser() -> argparse.ArgumentParser:
         default="pricing",
         help="Which workflow to run",
     )
-    parser.add_argument("--data-mode", choices=["example", "market"], default="example", help="Select built-in example data or CSV-backed market data")
+    parser.add_argument(
+        "--data-mode",
+        choices=["auto", "example", "market"],
+        default="auto",
+        help="Prefer market data when available, or force built-in example / explicit market modes",
+    )
     parser.add_argument("--curve-csv", help="Path to curve node CSV with columns maturity,zero_rate")
     parser.add_argument("--market-quotes-csv", help="Path to market quotes CSV with columns instrument_type,maturity,rate,pay_frequency")
     parser.add_argument("--spec-csv", help="Path to one-row swaption spec CSV")
     parser.add_argument("--vol-slice-csv", help="Path to swaption vol slice CSV")
     parser.add_argument("--bootstrap-curve", action="store_true", help="Bootstrap the curve from market quotes instead of reading curve nodes directly")
+    parser.add_argument(
+        "--model",
+        choices=["black", "sabr", "bachelier"],
+        default="black",
+        help="Pricing model used in pricing mode",
+    )
+    parser.add_argument("--black-vol", type=float, default=0.20, help="Fallback Black volatility when no market Black vol is available")
+    parser.add_argument("--normal-vol", type=float, default=0.01, help="Fallback Bachelier normal volatility when no market normal vol is available")
+    parser.add_argument("--sabr-alpha", type=float, default=0.0200, help="SABR alpha parameter for pricing mode")
+    parser.add_argument("--sabr-beta", type=float, default=0.50, help="SABR beta parameter for pricing mode")
+    parser.add_argument("--sabr-rho", type=float, default=-0.25, help="SABR rho parameter for pricing mode")
+    parser.add_argument("--sabr-nu", type=float, default=0.40, help="SABR nu parameter for pricing mode")
     parser.add_argument("--sofr-csv", help="Existing local SOFR history CSV with DATE,SOFR columns")
     parser.add_argument("--sofr-excel", help="Existing local New York Fed SOFR Excel export")
     parser.add_argument("--sofr-start", help="Optional SOFR download start date in YYYY-MM-DD format")

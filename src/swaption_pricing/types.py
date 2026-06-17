@@ -50,6 +50,9 @@ class ProjectDataBundle:
     market_quotes: Sequence[MarketQuote]
     vol_slice: Sequence[SwaptionVolQuote]
     source: str
+    curve_source: str
+    spec_source: str
+    vol_source: str
 
 
 @dataclass(frozen=True)
