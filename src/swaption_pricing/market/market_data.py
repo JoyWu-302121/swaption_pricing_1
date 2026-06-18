@@ -5,7 +5,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from math import exp
 
-from .types import Curve, CurvePoint
+from ..types import Curve, CurvePoint
 
 
 def discount_factor(zero_rate: float, maturity: float) -> float:

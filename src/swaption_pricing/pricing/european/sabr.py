@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from math import log, sqrt
 
 from .black76 import price_swaption, price_swaption_shifted_black
-from .swap import forward_swap_rate
-from .types import Curve, SwaptionSpec
+from ...core.swap import forward_swap_rate
+from ...types import Curve, SwaptionSpec
 
 
 @dataclass(frozen=True)

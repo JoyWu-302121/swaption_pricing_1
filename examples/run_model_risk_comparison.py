@@ -1,8 +1,8 @@
 """Compare risk and simple hedging results across all pricing models."""
 
 from swaption_pricing.hedging import compare_model_hedging
+from swaption_pricing.pricing.european import SabrParams
 from swaption_pricing.risk import compare_all_model_risks
-from swaption_pricing.sabr import SabrParams
 from swaption_pricing.types import CurvePoint, SwaptionSpec
 
 

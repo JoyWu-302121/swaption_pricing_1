@@ -16,7 +16,7 @@ Expected columns:
 The current loader reads this format through:
 
 - `main.py --curve-csv ...`
-- `src/swaption_pricing/data_loader.py`
+- `src/swaption_pricing/data/data_loader.py`
 
 ## Recommended Use
 

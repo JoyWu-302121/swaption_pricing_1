@@ -5,10 +5,10 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from .curve_bootstrap import bootstrap_zero_curve
-from .types import CurvePoint, MarketQuote, ProjectDataBundle, SwaptionSpec, SwaptionVolQuote
+from ..market.curve_bootstrap import bootstrap_zero_curve
+from ..types import CurvePoint, MarketQuote, ProjectDataBundle, SwaptionSpec, SwaptionVolQuote
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_EXAMPLE_DIR = PROJECT_ROOT / "data/european/example"
 DEFAULT_EXAMPLE_CURVE_CSV = DEFAULT_EXAMPLE_DIR / "curve_points.csv"
 DEFAULT_EXAMPLE_MARKET_QUOTES_CSV = DEFAULT_EXAMPLE_DIR / "market_quotes.csv"

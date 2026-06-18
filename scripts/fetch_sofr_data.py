@@ -12,7 +12,7 @@ SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from swaption_pricing.sofr import (
+from swaption_pricing.market import (
     prepare_sofr_data_bundle,
     prepare_sofr_data_bundle_from_excel,
     prepare_sofr_data_bundle_from_local_csv,

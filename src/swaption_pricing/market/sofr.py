@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 
 import pandas as pd
 
-from .types import MarketQuote, SofrObservation
+from ..types import MarketQuote, SofrObservation
 
 FRED_SOFR_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 

@@ -12,7 +12,7 @@ SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from swaption_pricing.ust_yield_curve_proxy import prepare_ust_yield_curve_proxy_bundle
+from swaption_pricing.market import prepare_ust_yield_curve_proxy_bundle
 
 
 def build_parser() -> argparse.ArgumentParser:

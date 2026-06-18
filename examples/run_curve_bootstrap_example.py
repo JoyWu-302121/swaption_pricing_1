@@ -1,7 +1,6 @@
 """Bootstrap simplified curve nodes and expand them into a daily zero curve."""
 
-from swaption_pricing.curve_bootstrap import bootstrap_zero_curve
-from swaption_pricing.market_data import build_daily_zero_curve
+from swaption_pricing.market import bootstrap_zero_curve, build_daily_zero_curve
 from swaption_pricing.types import MarketQuote
 
 

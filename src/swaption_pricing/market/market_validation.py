@@ -5,10 +5,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .black76 import price_swaption
+from ..core.swap import forward_swap_rate, swap_annuity
+from ..pricing.european.black76 import price_swaption
+from ..types import Curve, SwaptionSpec
 from .market_data import discount_factor
-from .swap import forward_swap_rate, swap_annuity
-from .types import Curve, SwaptionSpec
 
 
 def curve_node_rows(curve: Curve) -> list[dict[str, float]]:

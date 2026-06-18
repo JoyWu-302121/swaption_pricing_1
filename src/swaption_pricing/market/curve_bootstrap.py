@@ -5,7 +5,7 @@ from __future__ import annotations
 from math import log
 
 from .market_data import year_fractions
-from .types import CurvePoint, MarketQuote
+from ..types import CurvePoint, MarketQuote
 
 
 def zero_rate_from_discount_factor(discount_factor: float, maturity: float) -> float:

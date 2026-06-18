@@ -8,8 +8,8 @@ SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from swaption_pricing.bermudan import bermudan_lsmc_skeleton_summary
-from swaption_pricing.data_loader import load_project_data
+from swaption_pricing.data import load_project_data
+from swaption_pricing.pricing.bermudan import bermudan_lsmc_skeleton_summary
 from swaption_pricing.types import BermudanSwaptionSpec, HullWhiteParams, MonteCarloConfig
 
 

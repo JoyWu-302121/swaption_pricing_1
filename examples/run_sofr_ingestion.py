@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from swaption_pricing.sofr import latest_sofr_observation, write_sofr_market_quote_csv
+from swaption_pricing.market import latest_sofr_observation, write_sofr_market_quote_csv
 
 
 def main():

@@ -48,11 +48,11 @@ Demonstrate that the rates-input layer is coherent and usable for swaption analy
 
 ### Current project assets
 
-- `src/swaption_pricing/curve_bootstrap.py`
-- `src/swaption_pricing/market_data.py`
-- `src/swaption_pricing/swap.py`
-- `src/swaption_pricing/sofr.py`
-- `src/swaption_pricing/data_loader.py`
+- `src/swaption_pricing/market/curve_bootstrap.py`
+- `src/swaption_pricing/market/market_data.py`
+- `src/swaption_pricing/core/swap.py`
+- `src/swaption_pricing/market/sofr.py`
+- `src/swaption_pricing/data/data_loader.py`
 
 ### Minimum market-data inputs
 
@@ -126,9 +126,9 @@ Demonstrate that the volatility layer is informed by market-style inputs rather 
 
 ### Current project assets
 
-- `src/swaption_pricing/black76.py`
-- `src/swaption_pricing/sabr.py`
-- `src/swaption_pricing/calibration.py`
+- `src/swaption_pricing/pricing/european/black76.py`
+- `src/swaption_pricing/pricing/european/sabr.py`
+- `src/swaption_pricing/pricing/european/calibration.py`
 - `notebooks/milestone2_black_swaption_pricing.ipynb`
 - `notebooks/milestone3_sabr_smile_module.ipynb`
 - `notebooks/milestone4_2_calibration_stability.ipynb`
@@ -215,9 +215,9 @@ Demonstrate that the project is aware of model regime issues rather than assumin
 
 ### Current project assets
 
-- `src/swaption_pricing/black76.py`
-- `src/swaption_pricing/sabr.py`
-- `src/swaption_pricing/bachelier.py`
+- `src/swaption_pricing/pricing/european/black76.py`
+- `src/swaption_pricing/pricing/european/sabr.py`
+- `src/swaption_pricing/pricing/european/bachelier.py`
 - `notebooks/milestone4_1_shift_sensitivity.ipynb`
 - `notebooks/milestone4_3_bachelier_comparison.ipynb`
 

@@ -35,11 +35,14 @@ The Bermudan extension is separated into a dedicated group of modules:
 
 ```text
 src/swaption_pricing/
-  bermudan.py
-  monte_carlo.py
-  hull_white.py
-  lsmc.py
-  exercise.py
+  pricing/
+    bermudan/
+      __init__.py
+      bermudan.py
+      monte_carlo.py
+      hull_white.py
+      lsmc.py
+      exercise.py
 
 docs/
   bermudan_lsmc_design.md
@@ -106,6 +109,10 @@ Purpose:
 - orchestrate the curve, model, simulation, exercise, and regression layers
 - later serve as the single entry point for Bermudan pricing from notebooks or
   CLI tooling
+
+Current exported entry point:
+
+- `swaption_pricing.pricing.bermudan`
 
 ## Data Flow
 

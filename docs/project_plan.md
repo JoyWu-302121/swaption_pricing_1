@@ -107,33 +107,33 @@ Purpose:
 - value fixed and floating legs
 - compute annuity
 
-### `black76.py`
+### `pricing/european/black76.py`
 
 Purpose:
 - price payer and receiver swaptions using the Black framework
 
-### `sabr.py`
+### `pricing/european/sabr.py`
 
 Purpose:
 - compute SABR-implied Black volatility
 - feed smile-adjusted vol into Black pricing
 - compare flat-vol and strike-dependent-vol valuations
 
-### `calibration.py`
+### `pricing/european/calibration.py`
 
 Purpose:
 - calibrate SABR parameters to a volatility smile slice
 - compare fitted vols with input market vols
 - prepare for later vol cube work
 
-### `risk.py`
+### `risk/`
 
 Purpose:
 - compute finite-difference sensitivities
 - compare Black and SABR-adjusted risk outputs
 - create small scenario tables
 
-### `hedging.py`
+### `hedging/`
 
 Purpose:
 - estimate hedge ratio against swap PV01

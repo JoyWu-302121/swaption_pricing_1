@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from .types import CurvePoint
+from ..types import CurvePoint
 
 USTYC_SNAPSHOT_URL = "https://www.ustreasuryyieldcurve.com/api/v1/yield_curve_snapshot"
 

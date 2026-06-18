@@ -1,6 +1,6 @@
 """Value a vanilla swap under the simplified single-curve setup."""
 
-from swaption_pricing.swap import fixed_leg_pv, floating_leg_pv, forward_swap_rate, swap_present_value
+from swaption_pricing.core import fixed_leg_pv, floating_leg_pv, forward_swap_rate, swap_present_value
 from swaption_pricing.types import CurvePoint
 
 

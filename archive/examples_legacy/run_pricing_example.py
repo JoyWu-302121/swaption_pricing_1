@@ -1,8 +1,8 @@
 """Minimal example for pricing a USD European payer swaption."""
 
-from swaption_pricing.black76 import price_swaption
+from swaption_pricing.pricing.european import price_swaption
 from swaption_pricing.risk import calculate_risk
-from swaption_pricing.swap import forward_swap_rate, swap_annuity
+from swaption_pricing.core import forward_swap_rate, swap_annuity
 from swaption_pricing.types import CurvePoint, SwaptionSpec
 
 
@@ -47,4 +47,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

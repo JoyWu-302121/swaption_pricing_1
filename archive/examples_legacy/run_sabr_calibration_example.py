@@ -1,7 +1,7 @@
 """Calibrate SABR parameters to a synthetic volatility smile."""
 
-from swaption_pricing.calibration import calibrate_sabr_to_vols
-from swaption_pricing.sabr import SabrParams, sabr_implied_volatility
+from swaption_pricing.pricing.european import SabrParams, calibrate_sabr_to_vols
+from swaption_pricing.pricing.european.sabr import sabr_implied_volatility
 
 
 def main():
@@ -38,4 +38,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

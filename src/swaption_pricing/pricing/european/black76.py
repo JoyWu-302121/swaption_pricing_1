@@ -6,8 +6,8 @@ from math import log, sqrt
 
 from scipy.stats import norm
 
-from .swap import forward_swap_rate, swap_annuity
-from .types import Curve, SwaptionSpec
+from ...core.swap import forward_swap_rate, swap_annuity
+from ...types import Curve, SwaptionSpec
 
 
 def _d1(forward: float, strike: float, vol: float, expiry: float) -> float:

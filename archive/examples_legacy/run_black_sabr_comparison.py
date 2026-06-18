@@ -1,8 +1,7 @@
 """Compare flat-vol Black pricing against SABR-adjusted pricing."""
 
-from swaption_pricing.black76 import price_swaption
-from swaption_pricing.sabr import SabrParams, price_swaption_with_sabr
-from swaption_pricing.swap import forward_swap_rate
+from swaption_pricing.pricing.european import SabrParams, price_swaption, price_swaption_with_sabr
+from swaption_pricing.core import forward_swap_rate
 from swaption_pricing.types import CurvePoint, SwaptionSpec
 
 
@@ -44,4 +43,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

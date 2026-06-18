@@ -1,13 +1,13 @@
-"""Finite-difference risk calculations for the pricing engine."""
+"""Finite-difference risk calculations for European pricing engines."""
 
 from __future__ import annotations
 
 from dataclasses import replace
 
-from .bachelier import price_swaption_bachelier
-from .black76 import price_swaption, price_swaption_shifted_black
-from .sabr import SabrParams, price_swaption_with_sabr, price_swaption_with_shifted_sabr
-from .types import (
+from ..pricing.european.bachelier import price_swaption_bachelier
+from ..pricing.european.black76 import price_swaption, price_swaption_shifted_black
+from ..pricing.european.sabr import SabrParams, price_swaption_with_sabr, price_swaption_with_shifted_sabr
+from ..types import (
     Curve,
     ModelComparisonResult,
     ModelRiskSummary,
@@ -15,16 +15,7 @@ from .types import (
     RiskResult,
     SwaptionSpec,
 )
-
-
-def parallel_shift_curve(curve: Curve, shift: float) -> list:
-    """Apply a parallel shift to all zero rates."""
-    return [replace(point, zero_rate=point.zero_rate + shift) for point in curve]
-
-
-def price_with_curve_shift(curve: Curve, spec: SwaptionSpec, vol: float, shift: float) -> float:
-    shifted_curve = parallel_shift_curve(curve, shift)
-    return price_swaption(shifted_curve, spec, vol)
+from .curve import parallel_shift_curve, price_with_curve_shift
 
 
 def calculate_risk(curve: Curve, spec: SwaptionSpec, vol: float, rate_bump: float = 1e-4, vol_bump: float = 1e-4) -> RiskResult:

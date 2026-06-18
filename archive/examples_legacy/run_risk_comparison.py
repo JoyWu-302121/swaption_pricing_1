@@ -1,7 +1,7 @@
 """Compare pricing and risk outputs under Black and SABR-adjusted pricing."""
 
 from swaption_pricing.risk import compare_black_and_sabr_risk
-from swaption_pricing.sabr import SabrParams
+from swaption_pricing.pricing.european import SabrParams
 from swaption_pricing.types import CurvePoint, SwaptionSpec
 
 

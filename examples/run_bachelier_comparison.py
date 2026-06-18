@@ -1,9 +1,14 @@
 """Compare Black, shifted Black, and Bachelier pricing across rate regimes."""
 
-from swaption_pricing.bachelier import bachelier_option_value, price_swaption_bachelier
-from swaption_pricing.black76 import price_shifted_black, price_swaption, price_swaption_shifted_black
-from swaption_pricing.curve_bootstrap import bootstrap_zero_curve
-from swaption_pricing.swap import forward_swap_rate, swap_annuity
+from swaption_pricing.core import forward_swap_rate, swap_annuity
+from swaption_pricing.market import bootstrap_zero_curve
+from swaption_pricing.pricing.european import (
+    bachelier_option_value,
+    price_shifted_black,
+    price_swaption,
+    price_swaption_bachelier,
+    price_swaption_shifted_black,
+)
 from swaption_pricing.types import MarketQuote, SwaptionSpec
 
 
@@ -65,4 +70,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

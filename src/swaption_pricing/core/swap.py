@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from .market_data import discount_factor, year_fractions, zero_rate
-from .types import Curve
+from ..market.market_data import discount_factor, year_fractions, zero_rate
+from ..types import Curve
 
 
 def payment_schedule(start: float, tenor: float, pay_frequency: int) -> list[float]:

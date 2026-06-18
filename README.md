@@ -97,15 +97,33 @@ tests/                  Unit tests
 
 The pricing package is now conceptually split into:
 
+- `src/swaption_pricing/core/`
+  Product-agnostic rates contract analytics such as vanilla swap valuation
+- `src/swaption_pricing/market/`
+  Curve construction, market-data ingestion, and market validation helpers
+- `src/swaption_pricing/data/`
+  CSV and bundle loaders that orchestrate project inputs
 - `src/swaption_pricing/pricing/european/`
   European pricing workflow exports for Black, SABR, and Bachelier
 - `src/swaption_pricing/pricing/bermudan/`
   Bermudan LSMC scaffolding for market-calibrated Hull-White workflows
+- `src/swaption_pricing/risk/`
+  Shared risk helpers, including common curve shocks and European model risk summaries
+- `src/swaption_pricing/hedging/`
+  Shared hedging helpers, currently centered on swap-based hedge evaluation
 
 The current Bermudan market-style data scaffold lives in:
 
 - `data/bermudan/market/bermudan_spec.csv`
 - `data/bermudan/market/bermudan_european_calibration_vols.csv`
+
+The current Bermudan code entry point is:
+
+- `src/swaption_pricing/pricing/bermudan/`
+
+The current Bermudan research driver is:
+
+- `python3 examples/run_bermudan_lsmc.py`
 
 ## Repository Roles
 

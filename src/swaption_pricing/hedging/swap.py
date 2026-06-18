@@ -1,12 +1,13 @@
-"""Basic swaption hedging utilities."""
+"""Shared swap-hedging helpers used by model comparison workflows."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
-from .bachelier import price_swaption_bachelier
-from .black76 import price_swaption, price_swaption_shifted_black
-from .risk import (
+from ..pricing.european.bachelier import price_swaption_bachelier
+from ..pricing.european.black76 import price_swaption, price_swaption_shifted_black
+from ..pricing.european.sabr import SabrParams, price_swaption_with_sabr, price_swaption_with_shifted_sabr
+from ..risk import (
     calculate_bachelier_risk,
     calculate_risk,
     calculate_sabr_risk,
@@ -15,9 +16,8 @@ from .risk import (
     parallel_shift_curve,
     price_with_curve_shift,
 )
-from .sabr import SabrParams, price_swaption_with_sabr, price_swaption_with_shifted_sabr
-from .swap import forward_swap_rate, swap_present_value
-from .types import Curve, HedgeEvaluation, MultiModelHedgingComparison, SwaptionSpec
+from ..core.swap import forward_swap_rate, swap_present_value
+from ..types import Curve, HedgeEvaluation, MultiModelHedgingComparison, SwaptionSpec
 
 
 def hedge_ratio_from_pv01(target_pv01: float, hedge_instrument_pv01: float) -> float:

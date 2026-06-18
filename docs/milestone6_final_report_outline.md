@@ -117,8 +117,8 @@ Explain the inputs required before any pricing model becomes meaningful.
 
 ### Suggested project references
 
-- `src/swaption_pricing/data_loader.py`
-- `src/swaption_pricing/sofr.py`
+- `src/swaption_pricing/data/data_loader.py`
+- `src/swaption_pricing/market/sofr.py`
 - `data/european/market/README.md`
 - `notebooks/milestone1_curve_and_swap_analytics.ipynb`
 
@@ -145,9 +145,9 @@ Establish the foundation for all later pricing work.
 
 ### Suggested project references
 
-- `src/swaption_pricing/market_data.py`
-- `src/swaption_pricing/curve_bootstrap.py`
-- `src/swaption_pricing/swap.py`
+- `src/swaption_pricing/market/market_data.py`
+- `src/swaption_pricing/market/curve_bootstrap.py`
+- `src/swaption_pricing/core/swap.py`
 - `notebooks/milestone1_curve_and_swap_analytics.ipynb`
 
 ## 5. Black Pricing Benchmark
@@ -173,7 +173,7 @@ Build the baseline pricing and intuition layer.
 
 ### Suggested project references
 
-- `src/swaption_pricing/black76.py`
+- `src/swaption_pricing/pricing/european/black76.py`
 - `notebooks/milestone2_black_swaption_pricing.ipynb`
 
 ## 6. SABR Smile Modeling
@@ -196,7 +196,7 @@ Show why flat volatility is insufficient and how smile is introduced.
 
 ### Suggested project references
 
-- `src/swaption_pricing/sabr.py`
+- `src/swaption_pricing/pricing/european/sabr.py`
 - `notebooks/milestone3_sabr_smile_module.ipynb`
 
 ## 7. Calibration and Low-Rate Model Extension
@@ -224,8 +224,8 @@ Demonstrate that the project moves from exogenous parameters to fitted parameter
 
 ### Suggested project references
 
-- `src/swaption_pricing/calibration.py`
-- `src/swaption_pricing/bachelier.py`
+- `src/swaption_pricing/pricing/european/calibration.py`
+- `src/swaption_pricing/pricing/european/bachelier.py`
 - `notebooks/milestone4_overview_sabr_calibration_and_low_rate_extension.ipynb`
 - `notebooks/milestone4_1_shift_sensitivity.ipynb`
 - `notebooks/milestone4_2_calibration_stability.ipynb`
@@ -252,8 +252,8 @@ Show that model choice affects not just valuation but also practical risk interp
 
 ### Suggested project references
 
-- `src/swaption_pricing/risk.py`
-- `src/swaption_pricing/hedging.py`
+- `src/swaption_pricing/risk/`
+- `src/swaption_pricing/hedging/`
 - `notebooks/milestone5_risk_and_hedging_across_models.ipynb`
 
 ## 9. Practical Trading and Risk Use Cases

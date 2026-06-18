@@ -1,7 +1,7 @@
 """European swaption pricing workflow exports."""
 
-from ...bachelier import bachelier_option_value, price_swaption_bachelier
-from ...black76 import (
+from .bachelier import bachelier_option_value, price_swaption_bachelier
+from .black76 import (
     intrinsic_value,
     moneyness_label,
     price_shifted_black,
@@ -9,15 +9,16 @@ from ...black76 import (
     price_swaption_shifted_black,
     time_value,
 )
-from ...calibration import (
+from .calibration import (
     calibrate_sabr_across_beta_values,
     calibrate_sabr_for_multiple_initial_guesses,
     calibrate_sabr_to_vols,
+    calibrate_shifted_sabr_across_shifts,
     calibrate_shifted_sabr_to_vols,
     calibration_diagnostics,
     calibration_rows,
 )
-from ...sabr import (
+from .sabr import (
     SabrParams,
     price_swaption_with_sabr,
     price_swaption_with_shifted_sabr,
@@ -32,6 +33,7 @@ __all__ = [
     "calibrate_sabr_across_beta_values",
     "calibrate_sabr_for_multiple_initial_guesses",
     "calibrate_sabr_to_vols",
+    "calibrate_shifted_sabr_across_shifts",
     "calibrate_shifted_sabr_to_vols",
     "calibration_diagnostics",
     "calibration_rows",

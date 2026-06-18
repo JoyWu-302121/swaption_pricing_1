@@ -1,13 +1,6 @@
-from swaption_pricing.bachelier import bachelier_option_value, price_swaption_bachelier
-from swaption_pricing.black76 import (
-    intrinsic_value,
-    moneyness_label,
-    price_shifted_black,
-    price_swaption,
-    price_swaption_shifted_black,
-    time_value,
-)
-from swaption_pricing.calibration import (
+from swaption_pricing.pricing.european import (
+    SabrParams,
+    bachelier_option_value,
     calibrate_sabr_across_beta_values,
     calibrate_sabr_for_multiple_initial_guesses,
     calibrate_sabr_to_vols,
@@ -15,9 +8,27 @@ from swaption_pricing.calibration import (
     calibrate_shifted_sabr_to_vols,
     calibration_diagnostics,
     calibration_rows,
+    intrinsic_value,
+    moneyness_label,
+    price_shifted_black,
+    price_swaption,
+    price_swaption_bachelier,
+    price_swaption_shifted_black,
+    price_swaption_with_sabr,
+    price_swaption_with_shifted_sabr,
+    sabr_implied_volatility,
+    time_value,
 )
-from swaption_pricing.curve_bootstrap import bootstrap_zero_curve
-from swaption_pricing.data_loader import (
+from swaption_pricing.pricing.european.sabr import shifted_sabr_implied_volatility
+from swaption_pricing.core import (
+    fixed_leg_pv,
+    floating_leg_pv,
+    forward_swap_rate,
+    payment_schedule,
+    swap_annuity,
+    swap_present_value,
+)
+from swaption_pricing.data import (
     load_auto_bundle,
     load_curve_points_csv,
     load_example_bundle,
@@ -27,7 +38,33 @@ from swaption_pricing.data_loader import (
     load_swaption_spec_csv,
     load_swaption_vol_slice_csv,
 )
+from swaption_pricing.market import (
+    bootstrap_zero_curve,
+    build_daily_zero_curve,
+    build_fred_sofr_csv_url,
+    build_ust_snapshot_url,
+    curve_node_rows,
+    discount_factor_rows,
+    latest_sofr_observation,
+    latest_sofr_observation_from_excel,
+    load_json_metadata,
+    load_sofr_history_csv,
+    load_sofr_history_excel,
+    snapshot_to_curve_points,
+    sofr_to_market_quote,
+    trade_summary,
+    write_curve_points_csv,
+    write_snapshot_metadata,
+    write_sofr_history_csv_from_observations,
+    write_sofr_market_quote_csv,
+    write_sofr_metadata_json,
+    zero_rate,
+    prepare_sofr_data_bundle,
+    prepare_sofr_data_bundle_from_excel,
+    prepare_sofr_data_bundle_from_local_csv,
+)
 from swaption_pricing.pricing.bermudan import (
+    bermudan_lsmc_skeleton_summary,
     bermudan_exercise_schedule,
     build_bermudan_calibration_targets,
     build_lsmc_time_grid,
@@ -36,8 +73,6 @@ from swaption_pricing.pricing.bermudan import (
     polynomial_basis_vector,
 )
 from swaption_pricing.hedging import compare_model_hedging, swap_pv01
-from swaption_pricing.market_data import build_daily_zero_curve, zero_rate
-from swaption_pricing.market_validation import curve_node_rows, discount_factor_rows, load_json_metadata, trade_summary
 from swaption_pricing.risk import (
     calculate_bachelier_risk,
     calculate_sabr_risk,
@@ -46,43 +81,8 @@ from swaption_pricing.risk import (
     compare_all_model_risks,
     compare_black_and_sabr_risk,
 )
-from swaption_pricing.sabr import (
-    SabrParams,
-    price_swaption_with_sabr,
-    price_swaption_with_shifted_sabr,
-    sabr_implied_volatility,
-    shifted_sabr_implied_volatility,
-)
-from swaption_pricing.sofr import (
-    build_fred_sofr_csv_url,
-    latest_sofr_observation,
-    latest_sofr_observation_from_excel,
-    load_sofr_history_csv,
-    load_sofr_history_excel,
-    prepare_sofr_data_bundle,
-    prepare_sofr_data_bundle_from_local_csv,
-    prepare_sofr_data_bundle_from_excel,
-    sofr_to_market_quote,
-    write_sofr_metadata_json,
-    write_sofr_history_csv_from_observations,
-    write_sofr_market_quote_csv,
-)
-from swaption_pricing.swap import (
-    fixed_leg_pv,
-    floating_leg_pv,
-    forward_swap_rate,
-    payment_schedule,
-    swap_annuity,
-    swap_present_value,
-)
 from swaption_pricing.types import CurvePoint, MarketQuote, SwaptionSpec
 from swaption_pricing.types import BermudanSwaptionSpec, HullWhiteParams, MonteCarloConfig, SwaptionVolQuote
-from swaption_pricing.ust_yield_curve_proxy import (
-    build_ust_snapshot_url,
-    snapshot_to_curve_points,
-    write_curve_points_csv,
-    write_snapshot_metadata,
-)
 
 from pathlib import Path
 
@@ -296,6 +296,28 @@ def test_bermudan_lsmc_scaffold_helpers_return_expected_shapes():
     assert hw_model_summary(HullWhiteParams(mean_reversion=0.1, volatility=0.01))["volatility"] == 0.01
 
 
+def test_bermudan_lsmc_summary_uses_namespaced_workflow():
+    curve = sample_curve()
+    spec = BermudanSwaptionSpec(
+        notional=10_000_000.0,
+        strike=0.0400,
+        swap_tenor=5.0,
+        pay_frequency=1,
+        option_type="payer",
+        exercise_dates=[1.0, 2.0, 3.0],
+        maturity=7.0,
+    )
+    summary = bermudan_lsmc_skeleton_summary(
+        curve,
+        spec,
+        HullWhiteParams(mean_reversion=0.03, volatility=0.01),
+        MonteCarloConfig(num_paths=10, delta_time=0.5, seed=42, antithetic=True),
+    )
+    assert summary["exercise_dates"] == [1.0, 2.0, 3.0]
+    assert len(summary["immediate_exercise_values"]) == 3
+    assert summary["num_paths"] == 20
+
+
 def test_load_sofr_history_csv_reads_sample_file():
     root = repo_root()
     observations = load_sofr_history_csv(root / "data/common/market/sofr/sofr_history.sample.csv")
@@ -409,7 +431,7 @@ def test_prepare_sofr_data_bundle_writes_expected_outputs(tmp_path, monkeypatch)
         Path(output_path).write_bytes(source.read_bytes())
         return Path(output_path)
 
-    monkeypatch.setattr("swaption_pricing.sofr.download_sofr_history_csv", fake_download)
+    monkeypatch.setattr("swaption_pricing.market.sofr.download_sofr_history_csv", fake_download)
     outputs = prepare_sofr_data_bundle(tmp_path)
     assert outputs["history_csv"].exists()
     assert outputs["quote_csv"].exists()

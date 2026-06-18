@@ -6,8 +6,8 @@ from math import sqrt
 
 from scipy.stats import norm
 
-from .swap import forward_swap_rate, swap_annuity
-from .types import Curve, SwaptionSpec
+from ...core.swap import forward_swap_rate, swap_annuity
+from ...types import Curve, SwaptionSpec
 
 
 def bachelier_option_value(forward: float, strike: float, expiry: float, normal_vol: float, option_type: str) -> float:
@@ -31,4 +31,3 @@ def price_swaption_bachelier(curve: Curve, spec: SwaptionSpec, normal_vol: float
     annuity = swap_annuity(curve, spec.expiry, spec.tenor, spec.pay_frequency)
     payoff = bachelier_option_value(forward, spec.strike, spec.expiry, normal_vol, spec.option_type)
     return spec.notional * annuity * payoff
-
