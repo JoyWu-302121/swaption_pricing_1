@@ -1,2 +1,2 @@
-notional,strike,swap_tenor,pay_frequency,option_type,exercise_dates,maturity
-10000000,0.0450,10.0,1,payer,"1,2,3,4,5,6,7,8,9",10.0
+trade_id,product_type,currency,valuation_date,notional,option_type,strike,exercise_dates,maturity,settlement_type,calendar,business_day_convention,fixed_leg_frequency,fixed_leg_day_count,floating_leg_frequency,floating_leg_day_count,floating_index
+Bermudan_001,bermudan_swaption,USD,2026-06-18,10000000,payer,0.0450,"1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0",10.0,physical,NYC,modified_following,1,30_360,4,act_360,SOFR

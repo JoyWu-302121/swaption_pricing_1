@@ -30,6 +30,8 @@ from swaption_pricing.core import (
 )
 from swaption_pricing.data import (
     load_auto_bundle,
+    load_bermudan_calibration_vols_csv,
+    load_bermudan_spec_csv,
     load_curve_points_csv,
     load_example_bundle,
     load_market_bundle,
@@ -260,13 +262,16 @@ def test_load_project_data_supports_auto_mode():
 
 def test_bermudan_helpers_build_expected_schedule_and_targets():
     spec = BermudanSwaptionSpec(
+        trade_id="Bermudan_Test_001",
+        product_type="bermudan_swaption",
+        currency="USD",
+        valuation_date="2026-06-18",
         notional=10_000_000.0,
-        strike=0.0450,
-        swap_tenor=10.0,
-        pay_frequency=1,
         option_type="payer",
+        strike=0.0450,
         exercise_dates=[1.0, 2.0, 3.0],
         maturity=10.0,
+        fixed_leg_frequency=1,
     )
     quotes = [
         SwaptionVolQuote(expiry=1.0, tenor=9.0, strike=0.0450, vol=0.22, vol_type="black"),
@@ -279,15 +284,37 @@ def test_bermudan_helpers_build_expected_schedule_and_targets():
     assert len(build_bermudan_calibration_targets(spec, quotes)) == 3
 
 
+def test_load_bermudan_spec_csv_reads_new_contract_format():
+    root = repo_root()
+    spec = load_bermudan_spec_csv(root / "data/bermudan/market/bermudan_spec.csv")
+    assert spec.trade_id == "Bermudan_001"
+    assert spec.currency == "USD"
+    assert spec.exercise_dates == [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    assert spec.fixed_leg_frequency == 1
+    assert spec.floating_index == "SOFR"
+
+
+def test_load_bermudan_calibration_vols_csv_reads_new_quote_format():
+    root = repo_root()
+    quotes = load_bermudan_calibration_vols_csv(root / "data/bermudan/market/bermudan_european_calibration_vols.csv")
+    assert len(quotes) == 9
+    assert quotes[0].expiry == 1.0
+    assert quotes[0].tenor == 9.0
+    assert quotes[0].vol_type == "black"
+
+
 def test_bermudan_lsmc_scaffold_helpers_return_expected_shapes():
     spec = BermudanSwaptionSpec(
+        trade_id="Bermudan_Test_002",
+        product_type="bermudan_swaption",
+        currency="USD",
+        valuation_date="2026-06-18",
         notional=10_000_000.0,
-        strike=0.0450,
-        swap_tenor=10.0,
-        pay_frequency=1,
         option_type="payer",
+        strike=0.0450,
         exercise_dates=[1.0, 2.0, 3.0],
         maturity=10.0,
+        fixed_leg_frequency=1,
     )
     grid = build_lsmc_time_grid(spec, MonteCarloConfig(num_paths=1000, delta_time=1.0))
     assert grid[0] == 0.0
@@ -299,13 +326,16 @@ def test_bermudan_lsmc_scaffold_helpers_return_expected_shapes():
 def test_bermudan_lsmc_summary_uses_namespaced_workflow():
     curve = sample_curve()
     spec = BermudanSwaptionSpec(
+        trade_id="Bermudan_Test_003",
+        product_type="bermudan_swaption",
+        currency="USD",
+        valuation_date="2026-06-18",
         notional=10_000_000.0,
-        strike=0.0400,
-        swap_tenor=5.0,
-        pay_frequency=1,
         option_type="payer",
+        strike=0.0400,
         exercise_dates=[1.0, 2.0, 3.0],
         maturity=7.0,
+        fixed_leg_frequency=1,
     )
     summary = bermudan_lsmc_skeleton_summary(
         curve,

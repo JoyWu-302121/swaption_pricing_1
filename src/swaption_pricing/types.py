@@ -30,13 +30,28 @@ class SwaptionSpec:
 
 @dataclass(frozen=True)
 class BermudanSwaptionSpec:
+    trade_id: str
+    product_type: str
+    currency: str
+    valuation_date: str
     notional: float
-    strike: float
-    swap_tenor: float
-    pay_frequency: int
     option_type: str
+    strike: float
     exercise_dates: Sequence[float]
     maturity: float
+    settlement_type: str = "physical"
+    calendar: str = "NYC"
+    business_day_convention: str = "modified_following"
+    fixed_leg_frequency: int = 1
+    fixed_leg_day_count: str = "30_360"
+    floating_leg_frequency: int = 4
+    floating_leg_day_count: str = "act_360"
+    floating_index: str = "SOFR"
+
+    @property
+    def pay_frequency(self) -> int:
+        """Backward-compatible alias for the fixed-leg payment frequency."""
+        return self.fixed_leg_frequency
 
 
 @dataclass(frozen=True)

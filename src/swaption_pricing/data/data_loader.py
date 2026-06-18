@@ -6,7 +6,7 @@ import csv
 from pathlib import Path
 
 from ..market.curve_bootstrap import bootstrap_zero_curve
-from ..types import CurvePoint, MarketQuote, ProjectDataBundle, SwaptionSpec, SwaptionVolQuote
+from ..types import BermudanSwaptionSpec, CurvePoint, MarketQuote, ProjectDataBundle, SwaptionSpec, SwaptionVolQuote
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_EXAMPLE_DIR = PROJECT_ROOT / "data/european/example"
@@ -20,6 +20,12 @@ DEFAULT_MARKET_SPEC_CSV = DEFAULT_MARKET_DIR / "swaption_spec.csv"
 DEFAULT_MARKET_VOL_SLICE_CSV = DEFAULT_MARKET_DIR / "vol_slice.csv"
 DEFAULT_MARKET_QUOTES_CSV = DEFAULT_MARKET_DIR / "market_quotes.csv"
 DEFAULT_PROXY_CURVE_CSV = DEFAULT_MARKET_DIR / "ust_yield_curve_proxy/curve_points.csv"
+DEFAULT_BERMUDAN_EXAMPLE_DIR = PROJECT_ROOT / "data/bermudan/example"
+DEFAULT_BERMUDAN_EXAMPLE_SPEC_CSV = DEFAULT_BERMUDAN_EXAMPLE_DIR / "bermudan_spec.csv"
+DEFAULT_BERMUDAN_EXAMPLE_VOLS_CSV = DEFAULT_BERMUDAN_EXAMPLE_DIR / "bermudan_european_calibration_vols.csv"
+DEFAULT_BERMUDAN_MARKET_DIR = PROJECT_ROOT / "data/bermudan/market"
+DEFAULT_BERMUDAN_MARKET_SPEC_CSV = DEFAULT_BERMUDAN_MARKET_DIR / "bermudan_spec.csv"
+DEFAULT_BERMUDAN_MARKET_VOLS_CSV = DEFAULT_BERMUDAN_MARKET_DIR / "bermudan_european_calibration_vols.csv"
 
 
 def _read_csv_rows(path: str | Path) -> list[dict[str, str]]:
@@ -77,6 +83,53 @@ def load_swaption_vol_slice_csv(path: str | Path) -> list[SwaptionVolQuote]:
         )
         for row in _read_csv_rows(path)
     ]
+
+
+def load_bermudan_calibration_vols_csv(path: str | Path) -> list[SwaptionVolQuote]:
+    """Load European swaption calibration quotes for Bermudan model setup."""
+    rows = _read_csv_rows(path)
+    return [
+        SwaptionVolQuote(
+            expiry=float(row["expiry"]),
+            tenor=float(row["tenor"]),
+            strike=float(row["strike"]),
+            vol=float(row["vol"]),
+            vol_type=row.get("vol_type", "black"),
+        )
+        for row in rows
+        if str(row.get("is_calibration_target", "true")).strip().lower() in {"true", "1", "yes", "y"}
+    ]
+
+
+def _parse_exercise_dates(raw_value: str) -> list[float]:
+    return [float(item.strip()) for item in raw_value.split(",") if item.strip()]
+
+
+def load_bermudan_spec_csv(path: str | Path) -> BermudanSwaptionSpec:
+    """Load a one-row Bermudan swaption specification CSV."""
+    rows = _read_csv_rows(path)
+    if len(rows) != 1:
+        raise ValueError("bermudan spec CSV must contain exactly one row")
+    row = rows[0]
+    return BermudanSwaptionSpec(
+        trade_id=row["trade_id"],
+        product_type=row["product_type"],
+        currency=row["currency"],
+        valuation_date=row["valuation_date"],
+        notional=float(row["notional"]),
+        option_type=row["option_type"],
+        strike=float(row["strike"]),
+        exercise_dates=_parse_exercise_dates(row["exercise_dates"]),
+        maturity=float(row["maturity"]),
+        settlement_type=row.get("settlement_type", "physical"),
+        calendar=row.get("calendar", "NYC"),
+        business_day_convention=row.get("business_day_convention", "modified_following"),
+        fixed_leg_frequency=int(row.get("fixed_leg_frequency") or 1),
+        fixed_leg_day_count=row.get("fixed_leg_day_count", "30_360"),
+        floating_leg_frequency=int(row.get("floating_leg_frequency") or 4),
+        floating_leg_day_count=row.get("floating_leg_day_count", "act_360"),
+        floating_index=row.get("floating_index", "SOFR"),
+    )
 
 
 def load_example_bundle() -> ProjectDataBundle:
